@@ -168,7 +168,7 @@ export default {
         id: id,
       };
       // ref 加在子组件的时候 用  this.$ref.名字  获取的是  子组件的实例  可以使用子组件的任何方法
-      // this.$refs.popup.look(id);
+      this.$refs.popup.look(id);
     },
   },
   mounted() {

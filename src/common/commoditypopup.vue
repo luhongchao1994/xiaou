@@ -3,7 +3,11 @@
     <el-dialog :title="info.title" :visible.sync="info.isShow">
       <el-form :model="form">
         <el-form-item label="一级分类" :label-width="formLabelWidth">
-          <el-select v-model="form.first_cateid" placeholder="请选择" @change="changeFirst">
+          <el-select
+            v-model="form.first_cateid"
+            placeholder="请选择"
+            @change="changeFirst"
+          >
             <el-option label="--请选择--" value disabled></el-option>
             <el-option
               v-for="item in classifilist"
@@ -15,7 +19,7 @@
         </el-form-item>
         <el-form-item label="二级分类" :label-width="formLabelWidth">
           <el-select v-model="form.second_cateid" placeholder="请选择">
-            <el-option label="--请选择--" value disabled></el-option>
+            <el-option label="--请选择--" value="" disabled></el-option>
             <el-option
               v-for="item in secondCateList"
               :key="item.id"
@@ -41,6 +45,7 @@
             class="avatar-uploader"
             action="#"
             :show-file-list="false"
+            :on-change="change"
             style="border: 1px dashed red; width: 178px; height: 178px"
           >
             <img
@@ -54,25 +59,29 @@
         </el-form-item>
 
         <el-form-item label="商品规格" :label-width="formLabelWidth">
-          <el-select v-model="form.specsid" placeholder="请选择">
+          <el-select
+            v-model="form.specsid"
+            placeholder="请选择"
+            @change="chengeSpece"
+          >
             <el-option label="--请选择--" value disabled></el-option>
-            <!-- <el-option
-              v-for="item in list"
+            <el-option
+              v-for="item in commerciallist"
               :key="item.id"
-              :label="item.title"
+              :label="item.specsname"
               :value="item.id"
-            ></el-option> -->
+            ></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="规格属性" :label-width="formLabelWidth">
           <el-select v-model="form.specsattr" placeholder="请选择" multiple>
             <el-option label="--请选择--" value disabled></el-option>
-            <!-- <el-option
-              v-for="item in list"
-              :key="item.id"
-              :label="item.title"
-              :value="item.id"
-            ></el-option> -->
+            <el-option
+              v-for="item in attrList"
+              :key="item"
+              :label="item"
+              :value="item"
+            ></el-option>
           </el-select>
         </el-form-item>
 
@@ -113,7 +122,12 @@ import { alertSuccess, alertWarning } from "../util/alert";
 // 引入仓库数据
 import { mapGetters, mapActions } from "vuex";
 // 引入
-import { reqCatelist } from "../util/request";
+import {
+  reqCatelist,
+  reqGoodsAdd,
+  reqGoodsinfo,
+  reqGoodsdit,
+} from "../util/request";
 
 export default {
   props: ["info"],
@@ -122,7 +136,8 @@ export default {
     ...mapGetters({
       // 一级 分类的数据
       classifilist: "classifi/list",
-      //
+      //商品规格 列表
+      commerciallist: "commercial/list",
     }),
   },
   data() {
@@ -144,8 +159,12 @@ export default {
       },
       // 图片
       imageUrl: "",
+
       //二级分类的list
       secondCateList: [],
+
+      //规格属性的list
+      attrList: [],
     };
   },
   methods: {
@@ -154,14 +173,18 @@ export default {
       getclassifilist: "classifi/reqlist",
       // 商品 总数
       reqcount: "commodity/reqcount",
+      //获取规格list
+      getcommoditylist: "commercial/reqlist",
+      // 商品  总数
+      reqlist: "commodity/reqlist",
     }),
 
-     //一级分类发生了修改
-    changeFirst(){
-      //二级分类的id应该置空
-      this.form.second_cateid=""
+    //一级分类发生了修改
+    changeFirst() {
+      //二级分类的id  置空
+      this.form.second_cateid = "";
       //获取二级分类list
-      this.getsecondlist()
+      this.getsecondlist();
     },
     // 根据一级分类id   获取二级分类的列表
     getsecondlist() {
@@ -170,53 +193,114 @@ export default {
       });
     },
 
-    
+    // 处理 图片
+    // 传图片的时候  调用这个方法
+    change(file) {
+      //  把  图片转换成 路径
+      this.imageUrl = URL.createObjectURL(file.raw);
+      // 把form 表单的img  变成 文件类型
+      this.form.img = file.raw;
+    },
+
+    //处理商品 规格   商品 属性
+
+    chengeSpece() {
+      this.form.specsattr = [];
+      this.getAttrsList();
+    },
+
+    //根据选中的商品规格，计算一下展示属性列表
+    getAttrsList() {
+      //取出this.commerciallist 里面 的id是 form.specsid 的那条数据
+      let obj = this.commerciallist.find(
+        (item) => item.id === this.form.specsid
+      );
+      //要那条数据上的attrs
+      this.attrList = obj.attrs;
+    },
 
     // 清空表单数据
     empty() {
       this.form = {
-        specsname: "",
-        attrs: "",
+        first_cateid: "",
+        second_cateid: "",
+        goodsname: "",
+        price: "",
+        market_price: "",
+        img: null,
+        description: "",
+        specsid: "",
+        specsattr: [], //后端要得是  字符串数组  需要  转一下 JSON.stringify
+        isnew: 1,
+        ishot: 1,
         status: 1,
       };
-      this.newArr = [{ val: "" }];
+      // 图片
+      this.imageUrl = "";
+
+      //二级分类的list
+      this.secondCateList = [];
+
+      //规格属性的list
+      this.attrList = [];
     },
     // 添加数据
     add() {
-      console.log(this.form);
-      // map 过滤数组 然后返回一个 新数组
-      // this.form.attrs = JSON.stringify(this.newArr.map((item) => item.val));
-      // // 发请求
-      // reqSpecsAdd(this.form).then((res) => {
-      //   if (res.data.code == 200) {
-      //     alertSuccess(res.data.msg);
-      //     this.reqlist();
-      //     // 从新  请求  总条数
-      //     this.reqcount();
-      //   } else {
-      //     alertWarning(res.data.msg);
-      //   }
-      // });
+      // console.log(this.form);
+      let obj = {
+        ...this.form,
+      };
+      //需要处理一下   数组   变成  字符串数组
+      obj.specsattr = JSON.stringify(obj.specsattr);
+      let data = new FormData();
+      for (let i in obj) {
+        data.append(i, obj[i]);
+      }
+      // 发请求
+      reqGoodsAdd(data).then((res) => {
+        if (res.data.code == 200) {
+          alertSuccess(res.data.msg);
+          this.reqlist();
+          // 从新  请求  总条数
+          this.reqcount();
+        } else {
+          alertWarning(res.data.msg);
+        }
+      });
       this.info.isShow = false;
     },
 
     // 查看一条数据  先把一条的数据获取到  然后 赋值给  form
     look(id) {
-      reqSpecsinfo({ id: id }).then((res) => {
-        this.form = res.data.list[0];
-        console.log(this.form);
-        // 补 id
-        // this.form.id = id;
-        this.newArr = JSON.parse(res.data.list[0].attrs).map((item) => ({
-          val: item,
-        }));
+      reqGoodsinfo({ id: id }).then((res) => {
+        // console.log(res);
+        // 1 form 表单 赋值
+        this.form = res.data.list;
+        // 2.补id
+        this.form.id = id;
+        // 3.处理图片
+        this.imageUrl = this.$imgURL + this.form.img;
+        //4.根据id   展示 二级分类的 列表
+        this.getAttrsList();
+        //4.根据id   展示 一级分类的 列表
+        this.getsecondlist();
+        // 5 处理规格属性 得显示问题
+        this.form.specsattr = JSON.parse(this.form.specsattr);
       });
     },
 
     //修改数据
     update() {
-      this.form.attrs = JSON.stringify(this.newArr.map((item) => item.val));
-      reqSpecsdit(this.form).then((res) => {
+      let obj = {
+        ...this.form,
+      };
+      obj.specsattr = JSON.stringify(obj.specsattr);
+
+      let data = new FormData();
+      for (let i in obj) {
+        data.append(i, obj[i]);
+      }
+      reqGoodsdit(data).then((res) => {
         if (res.data.code == 200) {
           alertSuccess(res.data.msg);
           this.reqlist();
@@ -229,6 +313,7 @@ export default {
   },
   mounted() {
     this.getclassifilist();
+    this.getcommoditylist();
   },
 };
 </script>
