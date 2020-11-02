@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-dialog :title="info.title" :visible.sync="info.isShow">
+    <el-dialog :title="info.title" :visible.sync="info.isShow" @opened="opened">
       <el-form :model="form">
         <el-form-item label="一级分类" :label-width="formLabelWidth">
           <el-select
@@ -94,8 +94,9 @@
           <el-radio :label="2" v-model="form.ishot">否</el-radio>
         </el-form-item>
 
-        <!-- 富文本框 -->
-        <el-form-item label="商品描述" :label-width="formLabelWidth">
+        <el-form-item label="商品描述" label-width="120px">
+          <!-- 富文本编辑器 -->
+          <div v-if="info.isShow" id="editor"></div>
         </el-form-item>
 
         <el-form-item label="状态" :label-width="formLabelWidth">
@@ -117,6 +118,7 @@
   </div>
 </template>
 <script>
+import E from "wangeditor";
 // 引入 消息弹窗
 import { alertSuccess, alertWarning } from "../util/alert";
 // 引入仓库数据
@@ -168,6 +170,12 @@ export default {
     };
   },
   methods: {
+    //弹框打开完成，开始创建富文本编辑器
+    opened() {
+      this.editor = new E("#editor");
+      this.editor.create();
+      this.editor.txt.html(this.form.description);
+    },
     ...mapActions({
       //  一级分类的请求
       getclassifilist: "classifi/reqlist",
@@ -246,6 +254,8 @@ export default {
     },
     // 添加数据
     add() {
+      // 获取  富文本编辑器得  内容
+      this.form.description = this.editor.txt.html();
       // console.log(this.form);
       let obj = {
         ...this.form,
@@ -286,11 +296,17 @@ export default {
         this.getsecondlist();
         // 5 处理规格属性 得显示问题
         this.form.specsattr = JSON.parse(this.form.specsattr);
+        //6.将form.description 赋值给富文本编辑器
+        if (this.editor) {
+          this.editor.txt.html(this.form.description);
+        }
       });
     },
 
     //修改数据
     update() {
+      //获取一下富文本编辑器的内容给form.description
+      this.form.description = this.editor.txt.html();
       let obj = {
         ...this.form,
       };

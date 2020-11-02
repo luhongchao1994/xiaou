@@ -1,19 +1,36 @@
 import axios from "axios"
 import qs from "qs"
 import Vue from "vue"
+import store from "../store"
+import router from "../router"
 
+
+// 前端每一个请求,除了登录之外，都需要携带一个headers.authorization ,值是用户登录成功的token
+//请求拦截
+axios.interceptors.request.use(req => {
+    //如果请求的地址不是登录，就配置请求头
+    if (req.url !== baseUrl + "/api/userlogin") {
+        req.headers.authorization = store.state.userInfo.token;
+    }
+    return req;
+})
 // 请求拦截
 axios.interceptors.response.use((res) => {
     console.log("==========拦截开始===========");
     console.log(res);
-    if(res.data.list!=null){
+    //判断是否登录过期  msg="登录已过期或访问权限受限"
+    if (res.data.msg === "登录已过期或访问权限受限") {
+        router.push('/login')
+        //用户信息置空
+        store.dispatch("changeUserInfoAction", {})
+    }
+    if (res.data.list != null) {
         return res
-    }else{
-        res.data.list=[]
+    } else {
+        res.data.list = []
         return res
     }
 })
-
 // 定义主头
 const baseUrl = '/api'
 // 定义图片的头部
@@ -57,7 +74,6 @@ export const reqMenuListOne = (params) => {
 }
 
 // 修改菜单
-
 export const reqMenuUpate = (params) => {
     return axios({
         url: baseUrl + '/api/menuedit',
@@ -92,7 +108,6 @@ export const reqRoleListOne = (params) => {
         params: params
     })
 }
-
 
 // 角色删除
 export const reqRoleDel = (params) => {
@@ -327,4 +342,54 @@ export const reqGoodsdelete = (params) => {
     })
 }
 
+//登录
+export const reqLogin = (form) => {
+    return axios({
+        url: baseUrl + "/api/userlogin",
+        method: "post",
+        data: qs.stringify(form)
+    })
+}
 
+
+// 轮播图
+
+// 轮播图分类 获取全部列表   
+export const reqBannerlist = () => {
+    return axios({
+        url: baseUrl + "/api/bannerlist",
+        method: "get",
+    })
+}
+// 轮播图添加   有文件的
+export const reqBanneradd = (params) => {
+    return axios({
+        url: baseUrl + "/api/banneradd",
+        method: "post",
+        data: params
+    })
+}
+// 轮播图分类获取（一条）
+export const reqBannerinfo = (params) => {
+    return axios({
+        url: baseUrl + "/api/bannerinfo",
+        method: "get",
+        params: params
+    })
+}
+// 轮播图分类修改 有文件
+export const reqBanneredit = (params) => {
+    return axios({
+        url: baseUrl + "/api/banneredit",
+        method: "post",
+        data: params
+    })
+}
+// 轮播图删除
+export const reqBannerdelete = (params) => {
+    return axios({
+        url: baseUrl + "/api/bannerdelete",
+        method: "post",
+        data: params
+    })
+}
