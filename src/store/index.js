@@ -9,6 +9,7 @@ import classifi  from './modules/classifi'
 import commercial  from './modules/commercial'
 import commodity  from './modules/commodity'
 import banner  from './modules/banner'
+import seckill  from './modules/seckill'
 
 
 // 根目录下
@@ -26,6 +27,7 @@ export default new Vuex.Store({
         classifi,
         commercial,
         commodity,
-        banner
+        banner,
+        seckill
     }
 })

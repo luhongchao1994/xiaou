@@ -393,3 +393,45 @@ export const reqBannerdelete = (params) => {
         data: params
     })
 }
+
+
+// 会员
+// 会员分类 获取全部列表   
+export const reqSecklist = () => {
+    return axios({
+        url: baseUrl + "/api/secklist",
+        method: "get",
+    })
+}
+// 会员添加   有文件的
+export const reqSeckadd = (params) => {
+    return axios({
+        url: baseUrl + "/api/seckadd",
+        method: "post",
+        data: params
+    })
+}
+// 会员分类获取（一条）
+export const reqSeckinfo = (params) => {
+    return axios({
+        url: baseUrl + "/api/seckinfo",
+        method: "get",
+        params: params
+    })
+}
+// 会员分类修改 有文件
+export const reqSeckedit = (params) => {
+    return axios({
+        url: baseUrl + "/api/seckedit",
+        method: "post",
+        data: params
+    })
+}
+// 会员删除
+export const reqSeckdelete = (params) => {
+    return axios({
+        url: baseUrl + "/api/seckdelete",
+        method: "post",
+        data: params
+    })
+}
